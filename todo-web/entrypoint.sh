@@ -1,10 +1,12 @@
 #!/bin/sh
-# Inject runtime env variable into env.js before starting nginx
+# Substitute $TODO_API_URL into nginx config template
+envsubst '$TODO_API_URL' \
+  < /etc/nginx/conf.d/default.conf.template \
+  > /etc/nginx/conf.d/default.conf
 
-API_URL=${TODO_API_URL:-""}
-
+# Write runtime env for SPA — browser always uses the nginx proxy path
 cat <<EOF > /usr/share/nginx/html/env.js
-window.RUNTIME_TODO_API_URL = "${API_URL}";
+window.RUNTIME_TODO_API_URL = "/api";
 EOF
 
 exec "$@"
