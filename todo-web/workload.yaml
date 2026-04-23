@@ -1,23 +1,12 @@
-apiVersion: core.choreo.dev/v1beta1
-kind: WebApplication
-metadata:
-  name: todo-web
-  annotations:
-    core.choreo.dev/display-name: "Todo Web"
-    core.choreo.dev/description: "React frontend for the todo application"
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
 spec:
-  build:
-    buildpack:
-      name: Docker
-    docker:
-      context: .
-      dockerfilePath: ./Dockerfile
-      buildArgs:
-        VITE_API_BASE_URL: ${TODO_API_URL}
-  deployment:
-    routes:
-      - context: /
-        port: 9090
+  endpoints:
+    http:
+      type: HTTP
+      port: 9090
+      visibility:
+        - external
   dependencies:
     endpoints:
       - component: todo-api
