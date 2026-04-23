@@ -5,7 +5,7 @@ metadata:
 endpoints:
   - name: http
     type: HTTP
-    port: 90902
+    port: 9090
     visibility:
       - external
 
