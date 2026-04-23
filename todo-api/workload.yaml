@@ -4,7 +4,7 @@ metadata:
 
 endpoints:
   - name: todo-api-http
-    type: REST
+    type: HTTP
     port: 9090
     basePath: /
     visibility:
