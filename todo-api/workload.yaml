@@ -12,7 +12,7 @@ spec:
       context: .
       dockerfilePath: Dockerfile
   endpoints:
-    - name: http
+    - name: todo-api-http
       port: 9090
       type: REST
       basePath: /

@@ -12,7 +12,7 @@ endpoints:
 dependencies:
   endpoints:
     - component: todo-api
-      name: http
-      visibility: project
+      name: todo-api-http
+      visibility: external
       envBindings:
         address: TODO_API_URL
