@@ -1,0 +1,21 @@
+apiVersion: openchoreo.dev/v1alpha1
+kind: Service
+metadata:
+  name: todo-api
+spec:
+  autoBuild: true
+  autoDeploy: true
+  build:
+    buildpack:
+      name: docker
+    docker:
+      context: .
+      dockerfilePath: Dockerfile
+  endpoints:
+    - name: http
+      port: 9090
+      type: REST
+      basePath: /
+      visibility:
+        - project
+        - public
