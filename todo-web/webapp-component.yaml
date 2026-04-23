@@ -1,0 +1,26 @@
+# Sample: Web Application Component using the default deployment/web-application ComponentType
+#
+# This sample demonstrates:
+# - Using the default deployment/web-application ComponentType
+# - Web applications require HTTP endpoints
+# - Environment-specific resource overrides via ReleaseBinding
+
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: todo-web
+  namespace: default
+spec:
+  endpoints:
+    http:
+      type: HTTP
+      port: 9090
+      visibility: [external]
+  dependencies:
+    endpoints:
+      - component: todo-api
+        name: http
+        visibility: project
+        envBindings:
+          address: TODO_API_URL

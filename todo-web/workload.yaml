@@ -1,16 +1,18 @@
 apiVersion: openchoreo.dev/v1alpha1
-kind: Workload
-spec:
+metadata:
+  name: todo-web
+
+endpoints:
+  - name: http
+    type: HTTP
+    port: 9090
+    visibility:
+      - external
+
+dependencies:
   endpoints:
-    http:
-      type: HTTP
-      port: 9090
-      visibility:
-        - external
-  dependencies:
-    endpoints:
-      - component: todo-api
-        name: http
-        visibility: project
-        envBindings:
-          address: TODO_API_URL
+    - component: todo-api
+      name: http
+      visibility: project
+      envBindings:
+        address: TODO_API_URL
