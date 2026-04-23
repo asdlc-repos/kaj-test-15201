@@ -1,0 +1,70 @@
+{
+  "strategy": "Bottom-Up",
+  "overview": "The dependency graph is straightforward: `todo-api` has no dependencies and must be built first, while `todo-web` depends on `todo-api` and is built second. A Bottom-Up strategy is applied — foundation services are established before dependent consumers, ensuring the frontend can be developed and tested against a stable, fully-specified API contract.",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Foundation Services",
+      "description": "todo-api has no dependencies and forms the entire foundation layer. It must be implemented first so the frontend has a stable REST API to integrate against.",
+      "components": [
+        {
+          "name": "todo-api",
+          "componentType": "service",
+          "language": "Go / net/http",
+          "deployment": "Docker",
+          "responsibilities": [
+            "Manage in-memory CRUD operations for tasks and categories using sync.RWMutex-protected maps",
+            "Expose RESTful HTTP endpoints for tasks and categories, including completion toggling and category-based filtering",
+            "Enforce data integrity rules — validate required fields, reject references to non-existent categories, and nullify categoryId on tasks when a category is deleted",
+            "Return consistent JSON responses with appropriate HTTP status codes and Content-Type headers",
+            "Enable CORS for all origins and expose a /health endpoint for operational readiness checks"
+          ],
+          "architectureContext": "This is the sole backend service in the system. It is called directly by the todo-web frontend via REST over HTTP. It has no outbound dependencies of its own. It listens on port 9090 and serves as the authoritative source of truth for all task and category data, held entirely in memory.",
+          "keyConsiderations": [
+            "All shared state (tasks and categories maps) must be protected by sync.RWMutex — use RLock for reads and Lock for writes to avoid data races under concurrent requests",
+            "Deleting a category must iterate over all tasks and set their categoryId to nil atomically within a write lock to prevent partial updates",
+            "UUID generation via github.com/google/uuid must be the sole source of IDs — never accept client-supplied IDs for new resources",
+            "CORS middleware must set Access-Control-Allow-Origin: * and handle OPTIONS preflight requests before any route-specific logic runs",
+            "The multi-stage Dockerfile should use golang:1.22-alpine as builder and a minimal alpine (not scratch) final image to retain CA certificates and timezone data for time parsing"
+          ],
+          "apiContract": "openapi: 3.0.3\ninfo:\n  title: Todo API\n  version: 1.0.0\npaths:\n  /health:\n    get:\n      summary: Health check\n      responses:\n        '200':\n          description: OK\n  /categories:\n    get:\n      summary: List all categories\n      responses:\n        '200':\n          description: List of categories\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Category'\n    post:\n      summary: Create a category\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/CategoryInput'\n      responses:\n        '201':\n          description: Created category\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Category'\n  /categories/{id}:\n    put:\n      summary: Update a category\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/CategoryInput'\n      responses:\n        '200':\n          description: Updated category\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Category'\n        '404':\n          description: Not found\n    delete:\n      summary: Delete a category\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '204':\n          description: Deleted\n        '404':\n          description: Not found\n  /tasks:\n    get:\n      summary: List all tasks, optionally filtered by category\n      parameters:\n        - name: categoryId\n          in: query\n          required: false\n          schema:\n            type: string\n      responses:\n        '200':\n          description: List of tasks\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Task'\n    post:\n      summary: Create a task\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/TaskInput'\n      responses:\n        '201':\n          description: Created task\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Task'\n  /tasks/{id}:\n    put:\n      summary: Update a task\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/TaskInput'\n      responses:\n        '200':\n          description: Updated task\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Task'\n        '404':\n          description: Not found\n    delete:\n      summary: Delete a task\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '204':\n          description: Deleted\n        '404':\n          description: Not found\n  /tasks/{id}/complete:\n    patch:\n      summary: Toggle task completion status\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              type: object\n              properties:\n                completed:\n                  type: boolean\n      responses:\n        '200':\n          description: Updated task\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Task'\n        '404':\n          description: Not found\ncomponents:\n  schemas:\n    Category:\n      type: object\n      properties:\n        id:\n          type: string\n        name:\n          type: string\n        createdAt:\n          type: string\n          format: date-time\n    CategoryInput:\n      type: object\n      required: [name]\n      properties:\n        name:\n          type: string\n    Task:\n      type: object\n      properties:\n        id:\n          type: string\n        title:\n          type: string\n        completed:\n          type: boolean\n        dueDate:\n          type: string\n          format: date\n          nullable: true\n        categoryId:\n          type: string\n          nullable: true\n        createdAt:\n          type: string\n          format: date-time\n        updatedAt:\n          type: string\n          format: date-time\n    TaskInput:\n      type: object\n      required: [title]\n      properties:\n        title:\n          type: string\n        dueDate:\n          type: string\n          format: date\n          nullable: true\n        categoryId:\n          type: string\n          nullable: true\n        completed:\n          type: boolean\n",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Frontend Application",
+      "description": "todo-web depends on todo-api being available. It is implemented second, consuming the fully-defined REST API from Phase 1 and delivering the complete user-facing single-page application.",
+      "components": [
+        {
+          "name": "todo-web",
+          "componentType": "web-app",
+          "language": "TypeScript / React",
+          "deployment": "Docker",
+          "responsibilities": [
+            "Render a responsive single-page application with a category sidebar and a task main panel, supporting full CRUD interactions for both tasks and categories",
+            "Communicate exclusively with todo-api via typed fetch wrappers in api.ts, using VITE_API_BASE_URL as the configurable base URL injected at build time",
+            "Manage all client-side state with React useState and useEffect, re-fetching data from the API after every mutation to keep the UI consistent",
+            "Visually highlight overdue incomplete tasks (dueDate \u003c today) with a red due-date badge, and render completed tasks with a strikethrough style",
+            "Serve the compiled static assets via Nginx on port 9090, with SPA fallback routing and a /health endpoint returning HTTP 200"
+          ],
+          "architectureContext": "todo-web is the only client-facing component in the system. It depends entirely on todo-api for all data operations, communicating over REST/HTTP. No other component calls todo-web. Nginx acts as the static file server and health-check responder, while the React application running in the browser makes direct fetch calls to todo-api using the build-time-injected VITE_API_BASE_URL.",
+          "keyConsiderations": [
+            "VITE_API_BASE_URL must be baked in at Docker build time via ARG/ENV in the Dockerfile and passed to `npm run build` — runtime injection is not possible with Vite's static build model without additional tooling",
+            "The nginx.conf must include a `try_files $uri $uri/ /index.html` fallback so that deep-linking and page refreshes resolve correctly for SPA routing, plus an explicit `/health` location block returning 200",
+            "Overdue detection must compare dueDate strings (YYYY-MM-DD) against the client's local date — use new Date() carefully to avoid UTC/local timezone off-by-one errors (parse as local noon, not midnight UTC)",
+            "Category deletion confirmation dialog must clearly communicate to the user that associated tasks will not be deleted but will become uncategorised, matching the backend's nullification behaviour",
+            "All API error responses should surface inline (not just console.error) — maintain an error state per operation and render user-readable messages beneath the relevant form or list item"
+          ],
+          "apiContract": "openapi: 3.0.3\ninfo:\n  title: Todo Web (Frontend)\n  version: 1.0.0\npaths:\n  /health:\n    get:\n      summary: Health check served by Nginx\n      responses:\n        '200':\n          description: OK\n",
+          "dependencies": [
+            "todo-api"
+          ]
+        }
+      ]
+    }
+  ],
+  "sourceSpec": "spec-v1",
+  "sourceDesign": "design-v1"
+}
