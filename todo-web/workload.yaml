@@ -11,7 +11,7 @@ endpoints:
 
 dependencies:
   endpoints:
-    - component: todo-api
+    - component: kaj-test-15-todo-api
       name: todo-api-http
       visibility: project
       envBindings:
