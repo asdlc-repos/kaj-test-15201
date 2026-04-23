@@ -1,6 +1,10 @@
-import { Category, CategoryInput, Task, TaskInput } from './types';
+import { Category, CategoryInput, Task, TaskInput } from "./types";
 
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:9090';
+// Prefer runtime env variable if present, else fallback to build-time Vite env
+const BASE_URL =
+  (window.RUNTIME_TODO_API_URL as string) ||
+  (import.meta.env.VITE_API_BASE_URL as string) ||
+  "http://localhost:9090";
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -24,24 +28,27 @@ export async function fetchCategories(): Promise<Category[]> {
 
 export async function createCategory(input: CategoryInput): Promise<Category> {
   const res = await fetch(`${BASE_URL}/categories`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
   return handleResponse<Category>(res);
 }
 
-export async function updateCategory(id: string, input: CategoryInput): Promise<Category> {
+export async function updateCategory(
+  id: string,
+  input: CategoryInput,
+): Promise<Category> {
   const res = await fetch(`${BASE_URL}/categories/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
   return handleResponse<Category>(res);
 }
 
 export async function deleteCategory(id: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/categories/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${BASE_URL}/categories/${id}`, { method: "DELETE" });
   return handleResponse<void>(res);
 }
 
@@ -55,8 +62,8 @@ export async function fetchTasks(categoryId?: string): Promise<Task[]> {
 
 export async function createTask(input: TaskInput): Promise<Task> {
   const res = await fetch(`${BASE_URL}/tasks`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
   return handleResponse<Task>(res);
@@ -64,22 +71,25 @@ export async function createTask(input: TaskInput): Promise<Task> {
 
 export async function updateTask(id: string, input: TaskInput): Promise<Task> {
   const res = await fetch(`${BASE_URL}/tasks/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
   return handleResponse<Task>(res);
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/tasks/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${BASE_URL}/tasks/${id}`, { method: "DELETE" });
   return handleResponse<void>(res);
 }
 
-export async function toggleTaskCompletion(id: string, completed: boolean): Promise<Task> {
+export async function toggleTaskCompletion(
+  id: string,
+  completed: boolean,
+): Promise<Task> {
   const res = await fetch(`${BASE_URL}/tasks/${id}/complete`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ completed }),
   });
   return handleResponse<Task>(res);
