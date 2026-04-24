@@ -1,6 +1,4 @@
 #!/bin/sh
-# Strip trailing slash from TODO_API_URL before substituting into nginx template
-TODO_API_URL="${TODO_API_URL%/}"
 
 # Substitute $TODO_API_URL into nginx config template
 envsubst '$TODO_API_URL' \
